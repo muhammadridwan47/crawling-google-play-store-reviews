@@ -1,77 +1,203 @@
-# Permata Bank Review Text Mining
+# 📱 Crawling Google Play Store Reviews
 
-Pipeline modular untuk mengambil ulasan aplikasi PermataMobile X dari Google Play Store, memberi label sentimen berdasarkan rating, membersihkan teks, normalisasi slang (lokal), penghapusan stopword (lokal), dan stemming (via GataFramework API). Proses berjalan paralel dengan logging progres.
+Aplikasi sederhana untuk mengambil dan menganalisis review dari Google Play Store (Permata Bank Mobile X). Semua kode ditulis dalam **satu file** (`index.py`) yang mudah dibaca dan dipahami, bahkan oleh pemula!
 
-## Fitur
-- Scrape ulasan terbaru dengan `google-play-scraper`.
-- Label otomatis berdasarkan rating (≤2 Negatif, 3 Netral, ≥4 Positif).
-- Text cleaning (hapus URL, emotikon teks, hashtag, tanda baca, lowercasing, trim).
-- Normalisasi slang pakai `slank.json` (lokal).
-- Stopword removal pakai `stopword.json` (lokal).
-- Stemming Bahasa Indonesia melalui GataFramework API (retry & logging).
-- Proses paralel (ThreadPoolExecutor) + progress tracking.
-- Output tersimpan ke folder `data/`.
+## ✨ Fitur Utama
 
-## Prasyarat
-- Python 3.8+ disarankan.
-- Internet aktif (untuk scraping dan stemming via API).
+- 🔍 **Scraping Review** - Mengambil review terbaru dari Google Play Store
+- 🏷️ **Auto Labeling** - Memberikan label sentimen otomatis:
+  - ⭐⭐ (Rating 1-2) → **Negatif**
+  - ⭐⭐⭐ (Rating 3) → **Netral**
+  - ⭐⭐⭐⭐⭐ (Rating 4-5) → **Positif**
+- 🧹 **Text Cleaning** - Membersihkan teks dari URL, emoticon, hashtag, dan karakter khusus
+- 💬 **Normalisasi Slang** - Mengubah kata slang menjadi kata baku (contoh: "gue" → "saya")
+- 🚫 **Stopword Removal** - Menghapus kata-kata yang tidak penting
+- 🌿 **Stemming** - Mengubah kata ke bentuk dasarnya via GataFramework API
+- ⚡ **Proses Paralel** - Pemrosesan cepat dengan multi-threading
+- 📊 **Export Excel** - Hasil tersimpan dalam format Excel yang rapi
 
-## Instalasi
+## 📋 Prasyarat
+
+- Python 3.8 atau lebih baru
+- Koneksi internet (untuk scraping dan API stemming)
+
+## 🚀 Instalasi
+
+1. **Install dependencies:**
 ```bash
-pip install -r google-play-scraper pandas openpyxl
+pip install google-play-scraper pandas openpyxl
 ```
-Opsional (direkomendasikan): gunakan virtualenv/venv.
 
-## Menjalankan
+2. **Atau gunakan Makefile:**
+```bash
+make install
+```
+
+💡 **Tip:** Gunakan virtual environment untuk isolasi package:
+```bash
+python -m venv venv
+source venv/bin/activate  # Mac/Linux
+# atau
+venv\Scripts\activate     # Windows
+```
+
+## 🎯 Cara Menggunakan
+
+### Metode 1: Langsung dengan Python
 ```bash
 python index.py
 ```
-Logging proses akan tampil di terminal, termasuk status panggilan API GataFramework dan progres baris yang diproses.
 
-## Konfigurasi Utama
-- ID aplikasi Play Store: ubah konstanta `APP_ID` di `modules/data_collection.py`.
-- Jumlah ulasan/bahasa/negara: parameter `fetch_reviews_from_playstore(count=..., lang=..., country=...)` di `modules/data_collection.py` (dipanggil dari `modules/pipeline.py`).
-- Jumlah worker paralel: ubah argumen `max_workers` saat memanggil `process_text_mining(...)` di `modules/pipeline.py` (default 4).
-- Daftar slang: sunting `slank.json`.
-- Daftar stopword: sunting `stopword.json`.
-
-## Output
-File hasil akan dibuat otomatis di folder `data/`:
-- `bank-permata-data-set.csv` — hasil scraping mentah.
-- `bank-permata-labeling-data-set.csv` — data setelah auto labeling.
-- `bank-permata-labeling-data-set-result.xlsx` — hasil akhir (cleaning → slang removal → stopword removal → stemming).
-
-Catatan: Direkomendasikan menambahkan folder `data/` ke `.gitignore` agar tidak ikut ter-commit.
-
-## Arsitektur Modular (file utama)
-```
-.
-├─ index.py                        # Entrypoint: memanggil pipeline
-├─ modules/
-│  ├─ pipeline.py                 # Orkestrasi seluruh langkah
-│  ├─ logging_config.py           # Konfigurasi logger
-│  ├─ data_collection.py          # Ambil ulasan dari Play Store
-│  ├─ data_preparation.py         # Bentuk DataFrame & simpan CSV raw
-│  ├─ labeling.py                 # Auto-label & simpan CSV label
-│  ├─ dictionaries.py             # Load slang & stopword
-│  ├─ text_preprocessing.py       # Pembersihan teks dasar
-│  ├─ gata_api.py                 # Panggilan GataFramework (stemming)
-│  └─ text_mining.py              # Proses per baris + paralel
-├─ slank.json                     # Kamus slang → arti
-├─ stopword.json                  # Daftar stopword
-└─ data/                          # Output (dibuat otomatis)
+### Metode 2: Menggunakan Makefile
+```bash
+make run
 ```
 
-## Troubleshooting
-- API GataFramework gagal/time out:
-  - Script akan retry otomatis dan menulis "time out" bila tetap gagal.
-  - Cek koneksi internet atau jalankan ulang.
-- Stopword/slang tidak terhapus:
-  - Pastikan entri di `slank.json`/`stopword.json` huruf kecil (lowercase).
-  - Stopword removal dilakukan sebelum stemming.
-- Scraping kosong/kurang:
-  - Naikkan nilai `count` atau jalankan ulang pada waktu berbeda.
+Program akan menampilkan progress di terminal, termasuk:
+- Status pengambilan review
+- Progress pemrosesan setiap baris
+- Status panggilan API GataFramework
+- Hasil akhir
 
-## Lisensi
-Digunakan untuk keperluan riset/pembelajaran internal.
+## ⚙️ Konfigurasi
+
+Semua konfigurasi ada di file `index.py`. Anda bisa mengubah:
+
+### 1. **ID Aplikasi Play Store**
+```python
+APP_ID = 'net.myinfosys.PermataMobileX'  # Ubah sesuai aplikasi yang ingin di-crawl
+```
+
+### 2. **Jumlah Review yang Diambil**
+```python
+# Di fungsi fetch_reviews_from_playstore()
+def fetch_reviews_from_playstore(count=10, lang='id', country='id'):
+    # Ubah count=10 menjadi jumlah yang diinginkan
+```
+
+### 3. **Jumlah Worker Paralel**
+```python
+# Di fungsi main()
+processed_df = process_text_mining(labeled_data, slank_dict, stopword_set, max_workers=4)
+# Ubah max_workers=4 sesuai kemampuan komputer Anda
+```
+
+### 4. **Kamus Slang**
+Edit file `slank.json` untuk menambah/mengubah kata slang:
+```json
+[
+  {"slank": "gue", "slankmean": "saya"},
+  {"slank": "gak", "slankmean": "tidak"}
+]
+```
+
+### 5. **Daftar Stopword**
+Edit file `stopword.json` untuk menambah/mengubah stopword:
+```json
+["yang", "di", "ke", "dari", "untuk"]
+```
+
+## 📁 Struktur File
+
+```
+📦 crawling-google-play-store-reviews/
+├── 📄 index.py              # ⭐ SEMUA KODE ADA DI SINI (file utama)
+├── 📄 slank.json            # Kamus kata slang → kata baku
+├── 📄 stopword.json         # Daftar stopword bahasa Indonesia
+├── 📄 Makefile              # Perintah make untuk kemudahan
+├── 📄 Readme.md             # Dokumentasi ini
+└── 📁 data/                 # Folder hasil (dibuat otomatis)
+    ├── bank-permata-data-set.csv                    # Data mentah hasil scraping
+    ├── bank-permata-labeling-data-set.csv           # Data setelah labeling
+    └── bank-permata-labeling-data-set-result.xlsx   # ✅ Hasil akhir (Excel)
+```
+
+## 📊 Output yang Dihasilkan
+
+Semua file hasil akan tersimpan otomatis di folder `data/`:
+
+| File | Deskripsi |
+|------|-----------|
+| `bank-permata-data-set.csv` | Data mentah hasil scraping dari Play Store |
+| `bank-permata-labeling-data-set.csv` | Data setelah diberi label sentimen |
+| `bank-permata-labeling-data-set-result.xlsx` | **Hasil akhir** dengan semua proses text mining |
+
+### Kolom di File Hasil Akhir:
+- `no` - Nomor urut
+- `ulasan` - Review asli
+- `rating` - Rating (1-5)
+- `tanggal` - Tanggal review
+- `label` - Sentimen (Positif/Netral/Negatif)
+- `slang` - Teks setelah normalisasi slang
+- `indonesian_stopword_removal` - Teks setelah hapus stopword
+- `indonesian_stemming` - Teks setelah stemming
+
+## 🔧 Troubleshooting
+
+### ❌ API GataFramework Gagal/Time Out
+**Solusi:**
+- Script akan retry otomatis 3x
+- Jika tetap gagal, akan menulis "time out"
+- Cek koneksi internet Anda
+- Coba jalankan ulang program
+
+### ❌ Stopword/Slang Tidak Terhapus
+**Solusi:**
+- Pastikan entri di `slank.json` dan `stopword.json` dalam huruf kecil
+- Stopword removal dilakukan sebelum stemming
+- Periksa format JSON tidak rusak
+
+### ❌ Scraping Kosong/Kurang dari yang Diharapkan
+**Solusi:**
+- Naikkan nilai parameter `count` di fungsi `fetch_reviews_from_playstore()`
+- Jalankan ulang pada waktu berbeda
+- Pastikan APP_ID benar
+- Cek koneksi internet
+
+### ❌ Error Import Module
+**Solusi:**
+```bash
+pip install --upgrade google-play-scraper pandas openpyxl
+```
+
+## 📖 Penjelasan Alur Program
+
+Program berjalan dalam **6 langkah** berurutan:
+
+1. **LANGKAH 1** - Mengambil review dari Google Play Store
+2. **LANGKAH 2** - Menyiapkan data dalam bentuk tabel (DataFrame)
+3. **LANGKAH 3** - Memberikan label sentimen otomatis berdasarkan rating
+4. **LANGKAH 4** - Memuat kamus slang dan stopword dari file JSON
+5. **LANGKAH 5** - Memproses text mining (cleaning, slang removal, stopword removal, stemming)
+6. **LANGKAH 6** - Menyimpan hasil akhir ke file Excel
+
+Setiap langkah akan menampilkan progress dan status di terminal! 📺
+
+## 🎓 Cocok untuk Pemula
+
+File `index.py` ditulis dengan:
+- ✅ Komentar lengkap dalam Bahasa Indonesia
+- ✅ Struktur kode yang jelas dan terorganisir
+- ✅ Nama fungsi dan variabel yang mudah dipahami
+- ✅ Penjelasan setiap langkah proses
+- ✅ Tidak ada struktur kompleks atau pattern advanced
+
+## 📝 Catatan Penting
+
+- Folder `data/` akan dibuat otomatis saat pertama kali menjalankan program
+- Disarankan menambahkan `data/` ke `.gitignore` agar hasil tidak ikut ter-commit
+- API GataFramework adalah layanan eksternal, pastikan koneksi internet stabil
+- Proses stemming membutuhkan waktu karena memanggil API eksternal
+
+## 📜 Lisensi
+
+Digunakan untuk keperluan riset dan pembelajaran.
+
+## 🤝 Kontribusi
+
+Jika menemukan bug atau ingin menambah fitur, silakan buat issue atau pull request!
+
+---
+
+**Dibuat dengan ❤️ untuk pembelajaran text mining dan analisis sentimen**
 
