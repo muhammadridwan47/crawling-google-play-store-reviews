@@ -1,6 +1,6 @@
 # 📱 Crawling Google Play Store Reviews
 
-Aplikasi sederhana untuk mengambil dan menganalisis review dari Google Play Store (Permata Bank Mobile X). Semua kode ditulis dalam **satu file** (`index.py`) yang mudah dibaca dan dipahami, bahkan oleh pemula!
+Aplikasi menganalisis review dari Google Play Store (Permata Bank Mobile X)
 
 ## ✨ Fitur Utama
 
